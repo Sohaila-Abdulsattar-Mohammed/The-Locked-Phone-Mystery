@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- Ensure proper responsive behavior on mobile devices -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Locked Phone Mystery</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Start Screen Overlay -->
+    <div class="start-screen" id="startScreen">
+        <div class="start-content">
+            <h1 class="start-title">Ready to Begin?</h1>
+            <button class="start-button" id="startButton">Start Experience</button>
+        </div>
+    </div>
+    
+    <!-- Video Player Overlay -->
+    <div class="video-overlay" id="videoOverlay">
+        <video id="introVideo" class="fullscreen-video" preload="auto">
+            <source src="assets/video/scene1_video.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+    
+    <!-- Scene Video Overlay (for caption videos) -->
+    <div class="scene-video-overlay" id="sceneVideoOverlay">
+        <video id="sceneVideo" class="scene-video" preload="auto" muted>
+            <!-- Video source will be set dynamically -->
+            Your browser does not support the video tag.
+        </video>
+    </div>
+    
+    <!-- Main container for centering the iPhone on the page -->
+    <div class="phone-container">
+        <div class="iphone-frame">
+            <!-- Notch -->
+            <div class="notch"></div>
+            
+            <!-- Status Bar -->
+            <div class="status-bar">
+                <div class="status-time">9:41</div>
+                <div class="status-icons">
+                    <span class="signal">📶</span>
+                    <span class="wifi">📶</span>
+                    <span class="battery">🔋</span>
+                </div>
+            </div>
+            
+            <!-- Lock Screen Content - Main view when phone is locked -->
+            <div class="lock-screen">
+                <div class="lock-screen-content">
+                    <!-- Time and date display at the top of lock screen -->
+                    <div class="time-display">
+                        <div class="time">9:41</div>
+                        <div class="date">Tuesday, January 28</div>
+                    </div>
+                    
+                    <!-- Emergency call button - appears on right side of lock screen -->
+                    <!-- User must click and drag this button to reveal emergency contacts -->
+                    <div class="slide-indicator">
+                        <div class="emergency-call-button">
+                            <svg class="phone-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <!-- Swipe Up Hint -->
+                    <div class="swipe-up-hint">Swipe up to unlock</div>
+                </div>
+            </div>
+            
+            <!-- PIN Entry Screen - Slides up when user swipes up on lock screen -->
+            <div class="pin-screen" id="pinScreen">
+                <!-- Header with Cancel button and title -->
+                <div class="pin-header">
+                    <button class="cancel-button" id="cancelButton">Cancel</button>
+                    <h2 class="pin-title">Enter Passcode</h2>
+                    <div class="pin-spacer"></div> <!-- Balances the Cancel button on the left -->
+                </div>
+                
+                <!-- PIN dots container - shows 4 dots that fill as user enters digits -->
+                <div class="pin-dots-container">
+                    <div class="pin-dots" id="pinDotsContainer">
+                        <!-- Each dot represents one digit of the 4-digit PIN -->
+                        <div class="pin-dot" id="pinDot0"></div>
+                        <div class="pin-dot" id="pinDot1"></div>
+                        <div class="pin-dot" id="pinDot2"></div>
+                        <div class="pin-dot" id="pinDot3"></div>
+                    </div>
+                    <!-- Error message shown when incorrect PIN is entered -->
+                    <div class="pin-error-message" id="pinErrorMessage">Incorrect Passcode</div>
+                </div>
+                
+                <!-- Number keypad - iPhone-style with letters on each number key -->
+                <div class="pin-keypad">
+                    <div class="pin-row">
+                        <button class="pin-key" data-number="1"><span class="pin-number">1</span></button>
+                        <button class="pin-key" data-number="2"><span class="pin-number">2</span><span class="pin-letters">ABC</span></button>
+                        <button class="pin-key" data-number="3"><span class="pin-number">3</span><span class="pin-letters">DEF</span></button>
+                    </div>
+                    <div class="pin-row">
+                        <button class="pin-key" data-number="4"><span class="pin-number">4</span><span class="pin-letters">GHI</span></button>
+                        <button class="pin-key" data-number="5"><span class="pin-number">5</span><span class="pin-letters">JKL</span></button>
+                        <button class="pin-key" data-number="6"><span class="pin-number">6</span><span class="pin-letters">MNO</span></button>
+                    </div>
+                    <div class="pin-row">
+                        <button class="pin-key" data-number="7"><span class="pin-number">7</span><span class="pin-letters">PQRS</span></button>
+                        <button class="pin-key" data-number="8"><span class="pin-number">8</span><span class="pin-letters">TUV</span></button>
+                        <button class="pin-key" data-number="9"><span class="pin-number">9</span><span class="pin-letters">WXYZ</span></button>
+                    </div>
+                    <!-- Bottom row: empty space, 0, and delete/backspace button -->
+                    <div class="pin-row">
+                        <div class="pin-key-empty"></div> <!-- Empty space for alignment -->
+                        <button class="pin-key" data-number="0"><span class="pin-number">0</span></button>
+                        <!-- Delete button - removes last entered digit -->
+                        <button class="pin-key delete-key" id="deleteButton">
+                            <span class="delete-icon">⌫</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Emergency Contacts Panel - Slides in from right when phone icon is dragged -->
+            <div class="emergency-panel" id="emergencyPanel">
+                <div class="emergency-header">
+                    <h2>Emergency Contacts</h2>
+                    <div class="close-hint">Swipe right to close</div>
+                </div>
+                <!-- List of emergency contacts that can be called -->
+                <div class="emergency-list">
+                    <div class="emergency-item">
+                        <div class="emergency-icon">🦹‍♀️</div>
+                        <div class="emergency-info">
+                            <div class="emergency-name">Lina</div>
+                            <div class="emergency-number">+971207635489</div>
+                        </div>
+                    </div>
+                    <div class="emergency-item">
+                        <div class="emergency-icon">🏐</div>
+                        <div class="emergency-info">
+                            <div class="emergency-name">Maya</div>
+                            <div class="emergency-number">+971207545909</div>
+                        </div>
+                    </div>
+                    <div class="emergency-item">
+                        <div class="emergency-icon">⛰️</div>
+                        <div class="emergency-info">
+                            <div class="emergency-name">Noor</div>
+                            <div class="emergency-number">+971358737449</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Calling Screen - Appears when user clicks on an emergency contact -->
+            <div class="calling-screen" id="callingScreen">
+                <div class="calling-content">
+                    <div class="calling-status">Calling...</div>
+                    <!-- Contact's avatar/icon (emoji) -->
+                    <div class="calling-avatar" id="callingAvatar">📞</div>
+                    <!-- Contact's name -->
+                    <div class="calling-name" id="callingName">Contact Name</div>
+                    <!-- Contact's phone number -->
+                    <div class="calling-number" id="callingNumber">+1 (555) 000-0000</div>
+                    <div class="calling-actions">
+                        <!-- End call button - decorative only, not interactive -->
+                        <!-- Call automatically ends when audio finishes playing -->
+                        <div class="call-action-button end-call" id="endCallButton">
+                            <span class="call-action-icon">✕</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Unlocked Screen - Shown when correct PIN is entered -->
+            <div class="unlocked-screen" id="unlockedScreen">
+                <div class="unlocked-content">
+                    <div class="unlocked-icon">✓</div>
+                    <div class="unlocked-text">Congrats!</div>
+                    <div class="unlocked-subtext">You helped Sarah <br> unlock her phone!</div>
+                </div>
+            </div>
+            
+            <!-- Home Indicator -->
+            <div class="home-indicator"></div>
+        </div>
+    </div>
+    
+    <!-- Help Icon with Hints -->
+    <div class="help-icon-container" id="helpIconContainer">
+        <button class="help-icon" id="helpIcon" aria-label="Help and hints">?</button>
+        <div class="help-tooltip" id="helpTooltip">
+            <div class="help-tooltip-content">
+                <h3 class="help-title">Hints</h3>
+                <ul class="help-hints-list">
+                    <li>Click and drag up from the bottom of the lock screen to enter the passcode</li>
+                    <li>Click and drag the call button to the left to reveal emergency contacts</li>
+                    <li>Call Sarah's friends in this order: 🦹‍♀️ → 🏐 → ⛰️</li>
+                    <li>Figure out the correct passcode based on the hints Sarah's friends give, in order!</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
+
