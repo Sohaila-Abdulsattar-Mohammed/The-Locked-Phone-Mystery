@@ -8,6 +8,7 @@ const startScreen = document.getElementById('startScreen');
 const startButton = document.getElementById('startButton');
 const videoOverlay = document.getElementById('videoOverlay');
 const introVideo = document.getElementById('introVideo');
+const skipIntroButton = document.getElementById('skipIntroButton');
 
 // Initialize video: make it non-interactive (no controls, no context menu, etc.)
 introVideo.controls = false;
@@ -68,6 +69,28 @@ startButton.addEventListener('click', () => {
 // Handle video end - hide overlay and show phone interface
 introVideo.addEventListener('ended', () => {
     hideVideoOverlay();
+});
+
+// Handle skip intro button click - jump to end of video
+skipIntroButton.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Function to skip to end
+    function skipToEnd() {
+        if (introVideo.duration && isFinite(introVideo.duration)) {
+            // Jump to slightly before the end (0.1 seconds) to ensure 'ended' event fires
+            introVideo.currentTime = Math.max(0, introVideo.duration - 0.1);
+        }
+    }
+    
+    // If metadata is already loaded, skip immediately
+    if (introVideo.readyState >= 1 && introVideo.duration && isFinite(introVideo.duration)) {
+        skipToEnd();
+    } else {
+        // Wait for metadata to load, then skip
+        introVideo.addEventListener('loadedmetadata', skipToEnd, { once: true });
+    }
 });
 
 // Function to hide video overlay with smooth fade-out
@@ -284,8 +307,8 @@ lockScreen.addEventListener('contextmenu', (e) => {
 });
 
 // ========== CALLING SCREEN FUNCTIONALITY ==========
-// This section handles displaying the calling screen, playing scene audio files,
-// showing scene videos, and sliding the phone to the left
+// This section handles displaying the calling screen, playing scene videos with sound,
+// and sliding the phone to the left
 
 // Get references to calling screen DOM elements
 const callingScreen = document.getElementById('callingScreen');
@@ -299,22 +322,18 @@ const sceneVideo = document.getElementById('sceneVideo');
 
 // Track called contacts for sequential calling enforcement
 let calledContacts = [];  // Array to track which contacts have been called
-let currentAudio = null;  // Currently playing audio
 let isCallActive = false; // Whether a call is currently active
 
 // Mapping of contacts to their scene files
 // Contact order: Lina (0), Maya (1), Noor (2)
 const contactScenes = [
     {
-        audio: 'assets/sound/scene2.mp3',
         video: 'assets/video/scene2_video.mp4'
     },
     {
-        audio: 'assets/sound/scene3.mp3',
         video: 'assets/video/scene3_video.mp4'
     },
     {
-        audio: 'assets/sound/scene4.mp3',
         video: 'assets/video/scene4_video.mp4'
     }
 ];
@@ -361,9 +380,9 @@ function showCallingScreen(contactIndex, icon, name, number) {
     // Slide phone to the left
     phoneContainer.classList.add('phone-slide-left');
     
-    // Setup and show scene video (non-interactive, muted)
+    // Setup and show scene video (non-interactive, with sound)
     sceneVideo.src = scene.video;
-    sceneVideo.muted = true; // Ensure video is muted
+    sceneVideo.muted = false; // Video plays with sound
     sceneVideo.controls = false; // No controls
     sceneVideo.playsInline = true; // Important for mobile
     sceneVideo.load(); // Reload video with new source
@@ -384,48 +403,35 @@ function showCallingScreen(contactIndex, icon, name, number) {
             e.preventDefault();
         });
         
+        // When video ends, hide the calling screen
+        sceneVideo.addEventListener('ended', () => {
+            hideCallingScreen();
+        });
+        
         sceneVideo.dataset.listenersAdded = 'true';
     }
     
     // Show video overlay and play video
     sceneVideoOverlay.classList.add('active');
     
+    // Show the calling screen (fade in animation)
+    callingScreen.classList.add('active');
+    
     // Small delay to ensure overlay is displayed before playing
     setTimeout(() => {
         sceneVideo.play().catch(err => {
             console.error('Error playing scene video:', err);
+            // If video fails to play, end the call after 3 seconds as fallback
+            setTimeout(() => {
+                hideCallingScreen();
+            }, 3000);
         });
     }, 100);
-    
-    // Show the calling screen (fade in animation)
-    callingScreen.classList.add('active');
-    
-    // Load and play the scene audio file
-    currentAudio = new Audio(scene.audio);
-    currentAudio.addEventListener('ended', () => {
-        // When audio ends, end the call
-        hideCallingScreen();
-    });
-    
-    currentAudio.play().catch(err => {
-        console.error('Error playing scene audio:', err);
-        // If audio fails to play, end the call after 3 seconds as fallback
-        setTimeout(() => {
-            hideCallingScreen();
-        }, 3000);
-    });
 }
 
-// Hide the calling screen and stop any playing audio/video
-// This is called automatically when scene audio finishes playing
+// Hide the calling screen and stop any playing video
+// This is called automatically when scene video finishes playing
 function hideCallingScreen() {
-    // Stop and reset audio if it's currently playing
-    if (currentAudio) {
-        currentAudio.pause();
-        currentAudio.currentTime = 0;
-        currentAudio = null;
-    }
-    
     // Stop and hide scene video
     if (sceneVideo) {
         sceneVideo.pause();
