@@ -308,7 +308,7 @@ body {
 /* ========== Swipe Up Hint ========== */
 .swipe-up-hint {
     position: absolute;
-    bottom: 60px;
+    bottom: 70px;
     left: 50%;
     transform: translateX(-50%);
     color: rgba(255, 255, 255, 0.5);
