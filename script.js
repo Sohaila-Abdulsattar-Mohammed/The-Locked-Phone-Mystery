@@ -151,6 +151,14 @@ function handleStart(e) {
     // This prevents conflicting interactions
     if (isPinScreenOpen) return;
     
+    // Check if the touch/click is on an emergency contact item - don't drag in that case
+    const target = e.target;
+    const emergencyItem = target.closest('.emergency-item');
+    if (emergencyItem) {
+        // User is tapping on an emergency contact - don't interfere with click/touch events
+        return;
+    }
+    
     // If panel is already open, allow dragging from anywhere on the panel to close it
     if (isPanelOpen) {
         const x = getEventX(e);
@@ -166,7 +174,6 @@ function handleStart(e) {
     
     // If panel is closed, only start drag if user clicks on the emergency call button
     // We need to check if the click/touch is within the button's boundaries
-    const target = e.target;
     const buttonRect = emergencyCallButton.getBoundingClientRect();
     const x = getEventX(e);
     const y = e.touches && e.touches.length > 0 ? e.touches[0].clientY : e.clientY;
@@ -496,29 +503,61 @@ if (helpIconContainer) {
 
 // Get all emergency contact items
 const emergencyItems = document.querySelectorAll('.emergency-item');
-// Add click event listener to each emergency contact
+
+// Function to handle emergency contact selection
+function handleEmergencyContactClick(item, index) {
+    // Don't process clicks if a call is already active
+    if (isCallActive) {
+        return;
+    }
+    
+    // Extract contact information from the clicked item
+    const icon = item.querySelector('.emergency-icon').textContent;
+    const name = item.querySelector('.emergency-name').textContent;
+    const number = item.querySelector('.emergency-number').textContent;
+    
+    // Show calling screen with contact's information and scene files
+    // index: 0 = Lina (scene2), 1 = Maya (scene3), 2 = Noor (scene4)
+    showCallingScreen(index, icon, name, number);
+    
+    // Add visual feedback: briefly shrink the item when clicked (only if call starts)
+    if (!calledContacts.includes(index) && calledContacts.length === index) {
+        item.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+            item.style.transform = '';
+        }, 150);
+    }
+}
+
+// Add event listeners to each emergency contact (both click and touch for better mobile support)
 emergencyItems.forEach((item, index) => {
+    // Click event for desktop and mobile
     item.addEventListener('click', (e) => {
-        // Don't process clicks if a call is already active
-        if (isCallActive) {
-            return;
-        }
+        e.stopPropagation(); // Prevent event from bubbling to panel drag handlers
+        handleEmergencyContactClick(item, index);
+    });
+    
+    // Touch events for better mobile support
+    let touchStartTime = 0;
+    let touchStartY = 0;
+    
+    item.addEventListener('touchstart', (e) => {
+        touchStartTime = Date.now();
+        touchStartY = e.touches[0].clientY;
+        e.stopPropagation(); // Prevent event from bubbling to panel drag handlers
+    }, { passive: true });
+    
+    item.addEventListener('touchend', (e) => {
+        const touchEndTime = Date.now();
+        const touchDuration = touchEndTime - touchStartTime;
+        const touchEndY = e.changedTouches[0].clientY;
+        const touchDistance = Math.abs(touchEndY - touchStartY);
         
-        // Extract contact information from the clicked item
-        const icon = item.querySelector('.emergency-icon').textContent;
-        const name = item.querySelector('.emergency-name').textContent;
-        const number = item.querySelector('.emergency-number').textContent;
-        
-        // Show calling screen with contact's information and scene files
-        // index: 0 = Lina (scene2), 1 = Maya (scene3), 2 = Noor (scene4)
-        showCallingScreen(index, icon, name, number);
-        
-        // Add visual feedback: briefly shrink the item when clicked (only if call starts)
-        if (!calledContacts.includes(index) && calledContacts.length === index) {
-            item.style.transform = 'scale(0.95)';
-            setTimeout(() => {
-                item.style.transform = '';
-            }, 150);
+        // If it was a quick tap (not a drag), trigger the click
+        if (touchDuration < 300 && touchDistance < 10) {
+            e.preventDefault();
+            e.stopPropagation(); // Prevent event from bubbling to panel drag handlers
+            handleEmergencyContactClick(item, index);
         }
     });
 });
